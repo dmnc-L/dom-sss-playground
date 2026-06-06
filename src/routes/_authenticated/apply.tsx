@@ -167,10 +167,10 @@ function ApplyPage() {
       
       let room = "", house = "", street = "", sub = "", brgy = "", city = "", prov = "", zip = "";
       
-      let lastPart = rawParts[rawParts.length - 1];
-      if (/^\d{4}$/.test(lastPart)) {
-        zip = lastPart;
-        rawParts.pop();
+      const zipIndex = rawParts.findIndex((p: string) => /^\d{4,5}$/.test(p));
+      if (zipIndex !== -1) {
+        zip = rawParts[zipIndex];
+        rawParts.splice(zipIndex, 1);
       }
       
       if (rawParts.length > 0) prov = rawParts.pop() || "";
@@ -309,10 +309,10 @@ function ApplyPage() {
               onClick={handlePrefill}
               className="px-5 py-2.5 bg-blue-100 text-blue-700 text-sm font-bold uppercase tracking-wide hover:bg-blue-200 border-2 border-blue-200 rounded shadow-sm flex items-center space-x-2 transition-colors active:scale-95"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 fill-current" viewBox="0 0 24 24">
-                <path d="M19 12h-2v3h-3v2h5v-5zM7 9h3V7H5v5h2V9zm14-6H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16.01H3V4.99h18v14.02z" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 fill-blue-600" viewBox="0 0 24 24">
+                <path d="M19.36,2.72L20.78,4.14L15.06,9.85C16.13,11.39 16.28,13.24 15.38,14.44L9.06,8.12C10.26,7.22 12.11,7.37 13.65,8.44L19.36,2.72M5.93,17.57C3.92,15.56 2.69,13.16 2.35,10.92L7.23,8.83L14.67,16.27L12.58,21.15C10.34,20.81 7.94,19.58 5.93,17.57Z" />
               </svg>
-              <span>Smart Prefill Synthetic Data</span>
+              <span>PREFILL WITH SYNTHETIC DATA</span>
             </button>
           </div>
         )}
@@ -382,7 +382,11 @@ function ApplyPage() {
               <Field label="Telephone No." hint="(area + tel)">{input("ap_tel_no")}</Field>
               <Field label="Email Address" className="md:col-span-2" required>{input("ap_email_add", { type: "email", required: true })}</Field>
               
-              <Field label="Country" hint="(for OFW)" className="relative">
+              <Field label="Foreign Address" hint="(for Overseas Filipino Worker)" className="md:col-span-4">
+                <SplitAddress value={form.ap_foreign_address || ""} onChange={(v) => set("ap_foreign_address", v)} />
+              </Field>
+
+              <Field label="Country" hint="(for OFW)" className="relative md:col-span-2">
                 <div ref={dropdownRef} className="relative">
                   <ClearableInput
                     className="sss-input"
@@ -393,7 +397,7 @@ function ApplyPage() {
                       setShowCountryDropdown(true);
                     }}
                     onFocus={() => setShowCountryDropdown(true)}
-                    placeholder="Start typing..."
+                    placeholder="E.G. UNITED STATES"
                   />
                   {showCountryDropdown && filteredCountries.length > 0 && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-sss-form-border shadow-lg max-h-48 overflow-y-auto">
@@ -413,10 +417,6 @@ function ApplyPage() {
                     </div>
                   )}
                 </div>
-              </Field>
-
-              <Field label="Foreign Address" hint="(for Overseas Filipino Worker)" className="md:col-span-4">
-                <SplitAddress value={form.ap_foreign_address || ""} onChange={(v) => set("ap_foreign_address", v)} />
               </Field>
             </div>
 

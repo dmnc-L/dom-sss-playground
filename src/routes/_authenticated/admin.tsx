@@ -10,7 +10,8 @@ import {
   checkIsAdmin,
 } from "@/lib/applications.functions";
 import { toast } from "sonner";
-import { Check, X } from "lucide-react";
+import { Check, X, Search } from "lucide-react";
+import { ClearableInput } from "@/components/SplitInputs";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — SSS Portal" }] }),
@@ -128,13 +129,15 @@ function AdminPage() {
           </div>
           
           <div className="flex gap-2 w-full md:w-auto">
-            <input 
-              type="text" 
-              placeholder="Search Name or App #..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="sss-input text-sm py-1.5"
-            />
+            <div className="relative flex items-center w-full md:w-64">
+              <Search className="absolute left-2.5 w-4 h-4 text-gray-400 z-10" />
+              <ClearableInput 
+                placeholder="Search Name or App #..." 
+                value={searchTerm}
+                onChange={(val) => setSearchTerm(val)}
+                className="sss-input text-sm py-1.5 pl-9"
+              />
+            </div>
             <select 
               value={sortBy} 
               onChange={(e: any) => setSortBy(e.target.value)}
