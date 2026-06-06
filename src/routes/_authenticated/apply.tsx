@@ -160,17 +160,21 @@ function ApplyPage() {
       }
     };
 
-    const parseSmartAddress = (rawAddress: string) => {
+    const parseSmartAddress = (rawAddress: string, isLocal: boolean = true) => {
       if (!rawAddress || rawAddress === "N/A") return "";
       const rawParts = rawAddress.split(",").map((s: string) => s.trim());
       if (rawParts.length < 2) return rawAddress;
       
       let room = "", house = "", street = "", sub = "", brgy = "", city = "", prov = "", zip = "";
       
-      const zipIndex = rawParts.findIndex((p: string) => /^\d{4,5}$/.test(p));
-      if (zipIndex !== -1) {
-        zip = rawParts[zipIndex];
-        rawParts.splice(zipIndex, 1);
+      if (isLocal) {
+        const zipIndex = rawParts.findIndex((p: string) => /^\d{4,5}$/.test(p));
+        if (zipIndex !== -1) {
+          zip = rawParts[zipIndex];
+          rawParts.splice(zipIndex, 1);
+        }
+      } else {
+        if (rawParts.length > 0) zip = rawParts.pop() || "";
       }
       
       if (rawParts.length > 0) prov = rawParts.pop() || "";
@@ -180,6 +184,17 @@ function ApplyPage() {
       if (rawParts.length > 0) street = rawParts.pop() || "";
       if (rawParts.length > 0) house = rawParts.pop() || "";
       if (rawParts.length > 0) room = rawParts.join(", ");
+
+      if (!isLocal) {
+        if (!room) room = "N/A";
+        if (!house) house = "N/A";
+        if (!street) street = "N/A";
+        if (!sub) sub = "N/A";
+        if (!brgy) brgy = "N/A";
+        if (!city) city = "N/A";
+        if (!prov) prov = "N/A";
+        if (!zip) zip = "N/A";
+      }
       
       return [room, house, street, sub, brgy, city, prov, zip].join(", ");
     };
@@ -194,11 +209,11 @@ function ApplyPage() {
       applicant_name: parseSmartName(rowData["APPLICANT_NAME"]),
       ap_sex: (rowData["AP_SEX"] === "N/A" || !rowData["AP_SEX"]) ? "M" : (rowData["AP_SEX"] as "M" | "F"),
       ap_civil_status: (rowData["AP_CIVIL_STATUS"] === "N/A" || !rowData["AP_CIVIL_STATUS"]) ? "S" : (rowData["AP_CIVIL_STATUS"] as "S" | "M" | "W" | "SE"),
-      ap_local_address: parseSmartAddress(rowData["Applicant's complete residential address in the Philippines. (RM./FLR./UNIT NO. & BLDG. NAME, HOUSE/LOT & BLK NO., STREET NAME, SUBDIVISION, BARANGAY/DISTRICT/LOCALITY, CITY/MUNICIPALITY, PROVINCE, POSTAL CODE (NNNN))"]),
+      ap_local_address: parseSmartAddress(rowData["Applicant's complete residential address in the Philippines. (RM./FLR./UNIT NO. & BLDG. NAME, HOUSE/LOT & BLK NO., STREET NAME, SUBDIVISION, BARANGAY/DISTRICT/LOCALITY, CITY/MUNICIPALITY, PROVINCE, POSTAL CODE (NNNN))"], true),
       ap_tel_no: rowData["AP_TEL._NO."] || "",
       ap_mobile_no: rowData["AP_MOBILE_NO."] || "",
       ap_email_add: rowData["AP_EMAIL_ADD"] || "",
-      ap_foreign_address: rowData["Applicant's foreign residential address. (RM./FLR./UNIT NO. & BLDG. NAME, HOUSE/LOT & BLK NO., STREET NAME, SUBDIVISION, BARANGAY/DISTRICT/LOCALITY, CITY/MUNICIPALITY, PROVINCE, POSTAL CODE) (FOR OVERSEAS FILIPINO WORKER)"] === "N/A" ? "" : rowData["Applicant's foreign residential address. (RM./FLR./UNIT NO. & BLDG. NAME, HOUSE/LOT & BLK NO., STREET NAME, SUBDIVISION, BARANGAY/DISTRICT/LOCALITY, CITY/MUNICIPALITY, PROVINCE, POSTAL CODE) (FOR OVERSEAS FILIPINO WORKER)"],
+      ap_foreign_address: rowData["Applicant's foreign residential address. (RM./FLR./UNIT NO. & BLDG. NAME, HOUSE/LOT & BLK NO., STREET NAME, SUBDIVISION, BARANGAY/DISTRICT/LOCALITY, CITY/MUNICIPALITY, PROVINCE, POSTAL CODE) (FOR OVERSEAS FILIPINO WORKER)"] === "N/A" ? "" : parseSmartAddress(rowData["Applicant's foreign residential address. (RM./FLR./UNIT NO. & BLDG. NAME, HOUSE/LOT & BLK NO., STREET NAME, SUBDIVISION, BARANGAY/DISTRICT/LOCALITY, CITY/MUNICIPALITY, PROVINCE, POSTAL CODE) (FOR OVERSEAS FILIPINO WORKER)"], false),
       country: rowData["COUNTRY"] === "N/A" ? "" : rowData["COUNTRY"],
       
       sp_ss_num: rowData["SP_SS_NUM"] || "",
@@ -216,7 +231,7 @@ function ApplyPage() {
       ap_typeofemployer: (rowData["AP_TYPEOFEMPLOYER"] === "N/A" || !rowData["AP_TYPEOFEMPLOYER"]) ? "B" : (rowData["AP_TYPEOFEMPLOYER"] as "B" | "H"),
       ap_employer_name: rowData["AP_EMPLOYER_NAME"] || "",
       ap_occupation: rowData["AP_OCCUPATION/CURRENT_POSITION"] || "",
-      ap_employer_address: rowData["Complete business address of the applicant's employer. (RM./FLR./UNIT NO. & BLDG. NAME, HOUSE/LOT & BLK NO., STREET NAME, SUBDIVISION, BARANGAY/DISTRICT/LOCALITY, CITY/MUNICIPALITY, PROVINCE, POSTAL CODE)"] || "",
+      ap_employer_address: rowData["Complete business address of the applicant's employer. (RM./FLR./UNIT NO. & BLDG. NAME, HOUSE/LOT & BLK NO., STREET NAME, SUBDIVISION, BARANGAY/DISTRICT/LOCALITY, CITY/MUNICIPALITY, PROVINCE, POSTAL CODE)"] === "N/A" ? "" : parseSmartAddress(rowData["Complete business address of the applicant's employer. (RM./FLR./UNIT NO. & BLDG. NAME, HOUSE/LOT & BLK NO., STREET NAME, SUBDIVISION, BARANGAY/DISTRICT/LOCALITY, CITY/MUNICIPALITY, PROVINCE, POSTAL CODE)"], false),
       ap_employer_tel_no: rowData["AP_EMPLOYER_TEL_NO"] || "",
       ap_employer_email_add: rowData["AP_EMPLOYER_EMAIL_ADD"] || "",
       ap_employer_website: rowData["AP_EMPLOYER_WEBSITE"] || "",
@@ -307,12 +322,9 @@ function ApplyPage() {
             <button
               type="button"
               onClick={handlePrefill}
-              className="px-5 py-2.5 bg-blue-100 text-blue-700 text-sm font-bold uppercase tracking-wide hover:bg-blue-200 border-2 border-blue-200 rounded shadow-sm flex items-center space-x-2 transition-colors active:scale-95"
+              className="px-5 py-2.5 bg-blue-100 text-blue-700 text-sm font-bold uppercase tracking-wide hover:bg-blue-200 border-2 border-blue-200 rounded shadow-sm text-center transition-colors active:scale-95"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 fill-blue-600" viewBox="0 0 24 24">
-                <path d="M19.36,2.72L20.78,4.14L15.06,9.85C16.13,11.39 16.28,13.24 15.38,14.44L9.06,8.12C10.26,7.22 12.11,7.37 13.65,8.44L19.36,2.72M5.93,17.57C3.92,15.56 2.69,13.16 2.35,10.92L7.23,8.83L14.67,16.27L12.58,21.15C10.34,20.81 7.94,19.58 5.93,17.57Z" />
-              </svg>
-              <span>PREFILL WITH SYNTHETIC DATA</span>
+              PREFILL WITH SYNTHETIC DATA
             </button>
           </div>
         )}
